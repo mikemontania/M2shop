@@ -22,8 +22,8 @@ app.get("/health", (_req, res) => {
 app.use("/M2POS/ejemplo", require("./src/routes/ejemplo-routes"));
 app.use("/api/categories", require("./src/routes/category.routes"));
 app.use("/api/products", require("./src/routes/product.routes"));
-app.use("/api/orders", require("./src/routes/order.routes"));
-app.use("/api/auth", require("./src/routes/auth.routes"));
+aplicación.use("/api/orders", require("./src/routes/order.routes"));
+aplicación.use("/api/auth", require("./src/routes/auth.routes"));
 
 const dbSetup = async () => {
   await dbConnection();
