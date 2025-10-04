@@ -757,6 +757,8 @@ body {
 .cart-item-price {
   color: var(--text-light);
 }
+.cart-item-price .price-old { text-decoration: line-through; margin-right: 8px; }
+.cart-item-price .discount-tag { margin-left: 8px; color: var(--primary-color); font-weight: 600; }
 
 .cart-item-quantity {
   display: flex;
