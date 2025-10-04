@@ -10,6 +10,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-PY', {
@@ -22,6 +23,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addToCart(product, quantity);
+    setAdded(true);
+    setQuantity(1);
+    setTimeout(() => setAdded(false), 1800);
   };
 
   return (
@@ -62,6 +66,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           Agregar al Carrito
         </button>
       </div>
+      {added && (
+        <div className="toast-added" aria-live="polite">Agregado al carrito</div>
+      )}
     </Link>
   );
 }
