@@ -31,6 +31,7 @@ async function importCatalogIfPresent() {
   const slugToCategoryId = new Map(cats.map(c => [c.slug, c.id]));
 
   // Import products; use provided id as SKU (product id)
+  const defaultImage = data.defaults?.product_image_url || null;
   if (Array.isArray(data.products)) {
     for (const p of data.products) {
       const category_id = slugToCategoryId.get(p.category_slug);
@@ -46,7 +47,7 @@ async function importCatalogIfPresent() {
           recommended_uses: p.recommended_uses || null,
           properties: p.properties || null,
           price: p.price,
-          image_url: p.image_url || null,
+          image_url: p.image_url || defaultImage,
           stock: p.stock ?? 0,
           category_id,
           is_featured: !!p.is_featured,
@@ -62,7 +63,7 @@ async function importCatalogIfPresent() {
           recommended_uses: p.recommended_uses || null,
           properties: p.properties || null,
           price: p.price,
-          image_url: p.image_url || null,
+          image_url: p.image_url || defaultImage,
           stock: p.stock ?? record.stock,
           category_id,
           is_featured: !!p.is_featured,

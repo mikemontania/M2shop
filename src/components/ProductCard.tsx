@@ -31,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link to={`/producto/${product.slug}`} className="product-card">
       <div className="product-image">
-        <img src={product.image_url} alt={product.name} />
+        <img src={product.image_url} alt={product.name} onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-product.jpg'; }} />
         {product.is_new && <span className="badge badge-new">Nuevo</span>}
         {product.is_featured && <span className="badge badge-featured">Destacado</span>}
 

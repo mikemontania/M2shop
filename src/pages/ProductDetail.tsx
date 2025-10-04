@@ -66,7 +66,7 @@ export default function ProductDetail() {
 
         <div className="product-detail">
           <div className="product-image-section">
-            <img src={product.image_url} alt={product.name} />
+            <img src={product.image_url} alt={product.name} onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-product.jpg'; }} />
           </div>
 
           <div className="product-info-section">

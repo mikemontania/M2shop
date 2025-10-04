@@ -36,7 +36,7 @@ export default function Cart() {
           <div className="cart-items">
             {cart.map((item) => (
               <div key={item.productId} className="cart-item">
-                <img src={item.product.image_url} alt={item.product.name} />
+                <img src={item.product.image_url} alt={item.product.name} onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-product.jpg'; }} />
 
                 <div className="cart-item-info">
                   <h3>{item.product.name}</h3>
