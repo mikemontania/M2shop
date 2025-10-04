@@ -36,6 +36,13 @@ export default function ProductDetail() {
     }
   };
 
+  const hasDiscount = (product?.discount_percent ?? 0) > 0;
+  const discountedPrice = product
+    ? (hasDiscount
+        ? Math.round(product.price * (1 - (product.discount_percent as number) / 100))
+        : product.price)
+    : 0;
+
   if (loading) {
     return <div className="container loading">Cargando producto...</div>;
   }
@@ -76,10 +83,11 @@ export default function ProductDetail() {
             </div>
 
             <h1>{product.name}</h1>
-            {product.discount_percent && product.discount_percent > 0 ? (
+            {hasDiscount ? (
               <p className="product-price-large">
                 <span className="price-old">{formatPrice(product.price)}</span>
-                <span className="price-new">{formatPrice(product.price_with_discount || product.price)}</span>
+                <span className="price-new">{formatPrice(discountedPrice)}</span>
+                <small className="discount-tag" style={{ marginLeft: 8 }}>Oferta {product.discount_percent}%</small>
               </p>
             ) : (
               <p className="product-price-large">{formatPrice(product.price)}</p>

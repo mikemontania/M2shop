@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 
 export default function Cart() {
-  const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const { cart, removeFromCart, updateQuantity, cartSubtotal, cartDiscount, cartTotal } = useCart();
   const navigate = useNavigate();
 
   const formatPrice = (price: number) => {
@@ -41,11 +41,15 @@ export default function Cart() {
                 <div className="cart-item-info">
                   <h3>{item.product.name}</h3>
                   <p className="cart-item-price">
-                    {item.product.discount_percent && item.product.discount_percent > 0 ? (
+                    {(item.product.discount_percent ?? 0) > 0 ? (
                       <>
                         <span className="price-old">{formatPrice(item.product.price)}</span>
-                        <span className="price-new">{formatPrice(item.product.price_with_discount || item.product.price)}</span>
-                        <small className="discount-tag">Oferta {item.product.discount_percent}%</small>
+                        <span className="price-new">
+                          {formatPrice(Math.round(item.product.price * (1 - (item.product.discount_percent as number) / 100)))}
+                        </span>
+                        <small className="discount-tag">
+                          Oferta {item.product.discount_percent}%
+                        </small>
                       </>
                     ) : (
                       <span>{formatPrice(item.product.price)}</span>
@@ -74,7 +78,9 @@ export default function Cart() {
                 </div>
 
                 <div className="cart-item-total">
-                  {formatPrice((item.product.price_with_discount || item.product.price) * item.quantity)}
+                  {formatPrice(((item.product.discount_percent ?? 0) > 0
+                    ? Math.round(item.product.price * (1 - (item.product.discount_percent as number) / 100))
+                    : item.product.price) * item.quantity)}
                 </div>
 
                 <button
@@ -90,12 +96,18 @@ export default function Cart() {
             ))}
           </div>
 
-          <div className="cart-summary">
+            <div className="cart-summary">
             <h3>Resumen del Pedido</h3>
             <div className="summary-row">
-              <span>Subtotal:</span>
-              <span>{formatPrice(cartTotal)}</span>
+              <span>Subtotal productos:</span>
+              <span>{formatPrice(cartSubtotal)}</span>
             </div>
+            {cartDiscount > 0 && (
+              <div className="summary-row">
+                <span>Descuentos:</span>
+                <span>-{formatPrice(cartDiscount)}</span>
+              </div>
+            )}
             <div className="summary-row summary-total">
               <span>Total:</span>
               <span>{formatPrice(cartTotal)}</span>

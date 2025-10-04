@@ -28,47 +28,38 @@ export default function ProductCard({ product }: ProductCardProps) {
     setTimeout(() => setAdded(false), 1800);
   };
 
+  const hasDiscount = (product.discount_percent ?? 0) > 0;
+  const discountedPrice = hasDiscount
+    ? Math.round(product.price * (1 - (product.discount_percent as number) / 100))
+    : product.price;
+
   return (
     <Link to={`/producto/${product.slug}`} className="product-card">
       <div className="product-image">
-        <img src={product.image_url} alt={product.name} onError={(e) => { (e.target as HTMLImageElement).src = 'https://cdn.cavallaro.com.py/productos/300000918.jpg'; }} />
-        {product.discount_percent && product.discount_percent > 0 && (
+        <img
+          src={product.image_url}
+          alt={product.name}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://cdn.cavallaro.com.py/productos/300000918.jpg';
+          }}
+        />
+        {hasDiscount && (
           <img className="badge-image badge-sale" src="/badge-sale.png" alt="Oferta" />
         )}
         {product.is_new && (
           <img className="badge-image badge-new" src="/badge-new.png" alt="Nuevo" />
         )}
-
-        <div className="product-overlay" onClick={(e) => e.preventDefault()}>
-          <div className="overlay-content">
-            <div className="quantity-pill">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-                aria-label="Disminuir"
-              >
-                -
-              </button>
-              <span>{quantity}</span>
-              <button
-                onClick={() => setQuantity(Math.min(99, quantity + 1))}
-                aria-label="Aumentar"
-              >
-                +
-              </button>
-            </div>
-            <button onClick={handleAddToCart} className="btn btn-primary add-overlay-btn">
-              Agregar al Carrito
-            </button>
-          </div>
-        </div>
+        {!product.is_new && product.is_featured && (
+          <span className="badge badge-featured">Destacado</span>
+        )}
       </div>
+
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
-        {product.discount_percent && product.discount_percent > 0 ? (
+        {hasDiscount ? (
           <p className="product-price">
             <span className="price-old">{formatPrice(product.price)}</span>
-            <span className="price-new">{formatPrice(product.price_with_discount || product.price)}</span>
+            <span className="price-new">{formatPrice(discountedPrice)}</span>
           </p>
         ) : (
           <p className="product-price">{formatPrice(product.price)}</p>
@@ -77,8 +68,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           Agregar al Carrito
         </button>
       </div>
+
       {added && (
-        <div className="toast-added" aria-live="polite">Agregado al carrito</div>
+        <div className="toast-added" aria-live="polite">
+          Agregado al carrito
+        </div>
       )}
     </Link>
   );

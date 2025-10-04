@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Api } from '../lib/api';
 
 export default function Checkout() {
-  const { cart, cartTotal, clearCart } = useCart();
+  const { cart, cartSubtotal, cartDiscount, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -138,10 +138,25 @@ export default function Checkout() {
                   <span>
                     {item.product.name} x {item.quantity}
                   </span>
-                  <span>{formatPrice(item.product.price * item.quantity)}</span>
+                  <span>
+                    {formatPrice(((item.product.discount_percent ?? 0) > 0
+                      ? Math.round(item.product.price * (1 - (item.product.discount_percent as number) / 100))
+                      : item.product.price) * item.quantity)}
+                  </span>
                 </div>
               ))}
             </div>
+
+            <div className="summary-row">
+              <span>Subtotal productos:</span>
+              <span>{formatPrice(cartSubtotal)}</span>
+            </div>
+            {cartDiscount > 0 && (
+              <div className="summary-row">
+                <span>Descuentos:</span>
+                <span>-{formatPrice(cartDiscount)}</span>
+              </div>
+            )}
 
             <div className="summary-total">
               <span>Total:</span>
