@@ -1,4 +1,7 @@
 {
+  "defaults": {
+    "product_image_url": "https://www.cavallaro.com.py/images/default-product.jpg"
+  },
   "categories": [
     {
       "name": "Higiene Personal",
