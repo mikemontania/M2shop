@@ -32,8 +32,12 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link to={`/producto/${product.slug}`} className="product-card">
       <div className="product-image">
         <img src={product.image_url} alt={product.name} onError={(e) => { (e.target as HTMLImageElement).src = 'https://cdn.cavallaro.com.py/productos/300000918.jpg'; }} />
-        {product.is_new && <span className="badge badge-new">Nuevo</span>}
-        {product.is_featured && <span className="badge badge-featured">Destacado</span>}
+        {product.discount_percent && product.discount_percent > 0 && (
+          <img className="badge-image badge-sale" src="/badge-sale.png" alt="Oferta" />
+        )}
+        {product.is_new && (
+          <img className="badge-image badge-new" src="/badge-new.png" alt="Nuevo" />
+        )}
 
         <div className="product-overlay" onClick={(e) => e.preventDefault()}>
           <div className="overlay-content">
@@ -61,7 +65,14 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
-        <p className="product-price">{formatPrice(product.price)}</p>
+        {product.discount_percent && product.discount_percent > 0 ? (
+          <p className="product-price">
+            <span className="price-old">{formatPrice(product.price)}</span>
+            <span className="price-new">{formatPrice(product.price_with_discount || product.price)}</span>
+          </p>
+        ) : (
+          <p className="product-price">{formatPrice(product.price)}</p>
+        )}
         <button onClick={handleAddToCart} className="btn btn-primary">
           Agregar al Carrito
         </button>

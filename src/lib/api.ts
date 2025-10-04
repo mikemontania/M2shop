@@ -20,6 +20,8 @@ export interface ProductDto {
   stock: number;
   is_featured: boolean;
   is_new: boolean;
+  discount_percent?: number;
+  price_with_discount?: number;
 }
 
 export interface OrderCreateDto {
