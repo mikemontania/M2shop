@@ -7,7 +7,9 @@ interface CartContextType {
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
-  cartTotal: number;
+  cartSubtotal: number; // sum of original prices
+  cartDiscount: number; // total discount amount (positive number)
+  cartTotal: number; // subtotal - discount
   cartCount: number;
 }
 
@@ -67,10 +69,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart([]);
   };
 
+  const getDiscountedUnitPrice = (product: Product): number => {
+    const percent = product.discount_percent ?? 0;
+    if (percent > 0) {
+      const computed = Math.round(product.price * (1 - percent / 100));
+      return computed;
+    }
+    return product.price;
+  };
+
+  const cartSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const cartTotal = cart.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + getDiscountedUnitPrice(item.product) * item.quantity,
     0
   );
+  const cartDiscount = Math.max(0, cartSubtotal - cartTotal);
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -82,6 +95,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeFromCart,
         updateQuantity,
         clearCart,
+        cartSubtotal,
+        cartDiscount,
         cartTotal,
         cartCount,
       }}
