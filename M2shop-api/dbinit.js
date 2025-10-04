@@ -77,6 +77,34 @@ async function importCatalogIfPresent() {
   return true;
 }
 
+async function importDiscountsIfPresent() {
+  const file = path.join(__dirname, 'data', 'discounts.json');
+  if (!fs.existsSync(file)) return false;
+  const raw = fs.readFileSync(file, 'utf8');
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (_) {
+    console.error('discounts.json inválido');
+    return false;
+  }
+  if (!Array.isArray(data) || data.length === 0) return false;
+  const count = await Discount.count();
+  if (count > 0) return true; // ya hay descuentos
+  await Discount.bulkCreate(data.map(d => ({
+    type: d.type,
+    sku_from: d.sku_from ?? null,
+    sku_to: d.sku_to ?? null,
+    qty_from: d.qty_from ?? null,
+    qty_to: d.qty_to ?? null,
+    value: d.value,
+    start_date: d.start_date,
+    end_date: d.end_date,
+    product_id: d.product_id ?? null,
+  })));
+  return true;
+}
+
 async function populateDB() {
   try {
     // Evitar duplicados en cargas repetidas
@@ -94,19 +122,22 @@ async function populateDB() {
       ]);
     }
 
-    // Seed de descuentos de ejemplo según reglas provistas
-    const discountCount = await Discount.count();
-    if (discountCount === 0) {
-      await Discount.bulkCreate([
-        // AMOUNT por rango de montos (usa qty_from/qty_to como rango de monto en Gs)
-        { type: 'AMOUNT', qty_from: 1000001, qty_to: 999999999, value: 25, start_date: '2025-04-01', end_date: '9999-01-01' },
-        { type: 'AMOUNT', qty_from: 500001, qty_to: 999999, value: 20, start_date: '2025-04-01', end_date: '9999-01-01' },
-        { type: 'AMOUNT', qty_from: 200001, qty_to: 500000, value: 15, start_date: '2025-04-01', end_date: '9999-01-01' },
-        { type: 'AMOUNT', qty_from: 65001, qty_to: 200000, value: 10, start_date: '2025-04-01', end_date: '9999-01-01' },
-        { type: 'AMOUNT', qty_from: 20000, qty_to: 65000, value: 5, start_date: '2025-04-01', end_date: '9999-01-01' },
-        // PRODUCT: descuento por SKU/producto específico (ejemplo 300000231 con 20%)
-        { type: 'PRODUCT', product_id: 300000231, value: 20, start_date: '2025-04-02', end_date: '9999-01-02' },
-      ]);
+    // Descuentos: intentar importar desde data/discounts.json; si no, seed por defecto
+    const importedDiscounts = await importDiscountsIfPresent();
+    if (!importedDiscounts) {
+      const discountCount = await Discount.count();
+      if (discountCount === 0) {
+        await Discount.bulkCreate([
+          // AMOUNT por rango de montos (usa qty_from/qty_to como rango de monto en Gs)
+          { type: 'AMOUNT', qty_from: 1000001, qty_to: 999999999, value: 25, start_date: '2025-04-01', end_date: '9999-01-01' },
+          { type: 'AMOUNT', qty_from: 500001, qty_to: 999999, value: 20, start_date: '2025-04-01', end_date: '9999-01-01' },
+          { type: 'AMOUNT', qty_from: 200001, qty_to: 500000, value: 15, start_date: '2025-04-01', end_date: '9999-01-01' },
+          { type: 'AMOUNT', qty_from: 65001, qty_to: 200000, value: 10, start_date: '2025-04-01', end_date: '9999-01-01' },
+          { type: 'AMOUNT', qty_from: 20000, qty_to: 65000, value: 5, start_date: '2025-04-01', end_date: '9999-01-01' },
+          // PRODUCT: descuento por SKU/producto específico (ejemplo 300000231 con 20%)
+          { type: 'PRODUCT', product_id: 300000231, value: 20, start_date: '2025-04-02', end_date: '9999-01-02' },
+        ]);
+      }
     }
   } catch (err) {
     console.error('Error populating DB', err);
