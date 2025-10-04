@@ -6,6 +6,7 @@ const defineProduct = require('./models.product');
 const defineCustomer = require('./models.customer');
 const defineOrder = require('./models.order');
 const defineOrderItem = require('./models.orderItem');
+const defineDiscount = require('./models.discount');
 
 // Definición
 const Category = defineCategory(sequelize, DataTypes);
@@ -13,6 +14,7 @@ const Product = defineProduct(sequelize, DataTypes);
 const Customer = defineCustomer(sequelize, DataTypes);
 const Order = defineOrder(sequelize, DataTypes);
 const OrderItem = defineOrderItem(sequelize, DataTypes);
+const Discount = defineDiscount(sequelize, DataTypes);
 
 // Asociaciones
 // FK explícita en snake_case para alinear con frontend
@@ -32,4 +34,5 @@ module.exports = {
   Customer,
   Order,
   OrderItem,
+  Discount,
 };
