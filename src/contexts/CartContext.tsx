@@ -1,18 +1,18 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product } from '../lib/supabase';
+import { ProductDto as Product } from '../lib/api';
 
 interface CartContextType {
   cart: CartItemWithProduct[];
   addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
   cartTotal: number;
   cartCount: number;
 }
 
 interface CartItemWithProduct {
-  productId: string;
+  productId: number;
   quantity: number;
   product: Product;
 }
@@ -47,11 +47,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = (productId: number) => {
     setCart(current => current.filter(item => item.productId !== productId));
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: number, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(productId);
       return;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase, Product } from '../lib/supabase';
+import { Api, ProductDto as Product } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
 
 export default function ProductDetail() {
@@ -17,13 +17,8 @@ export default function ProductDetail() {
   async function fetchProduct() {
     if (!slug) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .eq('slug', slug)
-      .maybeSingle();
-
-    if (data) setProduct(data);
+    const data = await Api.getProductBySlug(slug);
+    setProduct(data);
     setLoading(false);
   }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase, Product, Category } from '../lib/supabase';
+import { Api, ProductDto as Product, CategoryDto as Category } from '../lib/api';
 import ProductCard from '../components/ProductCard';
 
 export default function Home() {
@@ -36,15 +36,14 @@ export default function Home() {
   }, []);
 
   async function fetchData() {
-    const [featuredRes, newRes, categoriesRes] = await Promise.all([
-      supabase.from('products').select('*').eq('is_featured', true).limit(4),
-      supabase.from('products').select('*').eq('is_new', true).limit(4),
-      supabase.from('categories').select('*').order('display_order'),
+    const [featured, news, categoriesList] = await Promise.all([
+      Api.listProducts({ is_featured: true }),
+      Api.listProducts({ is_new: true }),
+      Api.listCategories(),
     ]);
-
-    if (featuredRes.data) setFeaturedProducts(featuredRes.data);
-    if (newRes.data) setNewProducts(newRes.data);
-    if (categoriesRes.data) setCategories(categoriesRes.data);
+    setFeaturedProducts(featured.slice(0, 4));
+    setNewProducts(news.slice(0, 4));
+    setCategories(categoriesList);
   }
 
   return (

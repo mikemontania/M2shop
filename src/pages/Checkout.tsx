@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
-import { supabase } from '../lib/supabase';
+import { Api } from '../lib/api';
 
 export default function Checkout() {
   const { cart, cartTotal, clearCart } = useCart();
@@ -27,33 +27,13 @@ export default function Checkout() {
     setLoading(true);
 
     try {
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          customer_name: formData.customerName,
-          customer_email: formData.customerEmail,
-          customer_phone: formData.customerPhone,
-          shipping_address: formData.shippingAddress,
-          total_amount: cartTotal,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const orderItems = cart.map((item) => ({
-        order_id: order.id,
-        product_id: item.productId,
-        quantity: item.quantity,
-        price: item.product.price,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
+      const order = await Api.createOrder({
+        customer_name: formData.customerName,
+        customer_email: formData.customerEmail,
+        customer_phone: formData.customerPhone,
+        shipping_address: formData.shippingAddress,
+        items: cart.map((item) => ({ product_id: Number(item.productId), quantity: item.quantity })),
+      });
 
       clearCart();
       navigate('/pedido-confirmado', { state: { orderId: order.id } });

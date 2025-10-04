@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Product } from '../lib/supabase';
+import { ProductDto as Product } from '../lib/api';
 import { useCart } from '../contexts/CartContext';
 
 interface ProductCardProps {
