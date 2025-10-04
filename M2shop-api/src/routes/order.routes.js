@@ -1,0 +1,7 @@
+const { Router } = require('express');
+const ctrl = require('../controllers/order.controller');
+const router = Router();
+
+router.post('/', ctrl.create);
+
+module.exports = router;

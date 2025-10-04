@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase, Product, Category } from '../lib/supabase';
+import { Api, ProductDto as Product, CategoryDto as Category } from '../lib/api';
 import ProductCard from '../components/ProductCard';
 
 export default function Products() {
@@ -26,30 +26,17 @@ export default function Products() {
   }, [selectedCategory, searchTerm]);
 
   async function fetchCategories() {
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .order('display_order');
-    if (data) setCategories(data);
+    const data = await Api.listCategories();
+    setCategories(data);
   }
 
   async function fetchProducts() {
     setLoading(true);
-    let query = supabase.from('products').select('*');
-
-    if (selectedCategory) {
-      const category = categories.find(c => c.slug === selectedCategory);
-      if (category) {
-        query = query.eq('category_id', category.id);
-      }
-    }
-
-    if (searchTerm) {
-      query = query.ilike('name', `%${searchTerm}%`);
-    }
-
-    const { data } = await query.order('created_at', { ascending: false });
-    if (data) setProducts(data);
+    const data = await Api.listProducts({
+      category_slug: selectedCategory || undefined,
+      search: searchTerm || undefined,
+    });
+    setProducts(data);
     setLoading(false);
   }
 
