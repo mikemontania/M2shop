@@ -410,6 +410,19 @@ body {
   top: 36px;
 }
 
+.badge-image {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 56px;
+  height: auto;
+}
+
+.badge-image.badge-new {
+  left: auto;
+  right: 8px;
+}
+
 .product-info {
   padding: 14px;
   display: flex;
@@ -430,6 +443,18 @@ body {
   color: var(--primary-color);
   font-weight: 700;
   margin-bottom: 8px;
+}
+
+.product-price .price-old {
+  color: #888;
+  text-decoration: line-through;
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+.product-price .price-new {
+  color: var(--primary-color);
+  font-weight: 800;
 }
 
 .toast-added {
@@ -732,6 +757,8 @@ body {
 .cart-item-price {
   color: var(--text-light);
 }
+.cart-item-price .price-old { text-decoration: line-through; margin-right: 8px; }
+.cart-item-price .discount-tag { margin-left: 8px; color: var(--primary-color); font-weight: 600; }
 
 .cart-item-quantity {
   display: flex;

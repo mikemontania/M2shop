@@ -76,7 +76,14 @@ export default function ProductDetail() {
             </div>
 
             <h1>{product.name}</h1>
-            <p className="product-price-large">{formatPrice(product.price)}</p>
+            {product.discount_percent && product.discount_percent > 0 ? (
+              <p className="product-price-large">
+                <span className="price-old">{formatPrice(product.price)}</span>
+                <span className="price-new">{formatPrice(product.price_with_discount || product.price)}</span>
+              </p>
+            ) : (
+              <p className="product-price-large">{formatPrice(product.price)}</p>
+            )}
 
             <div className="product-description">
               <h3>Descripción</h3>

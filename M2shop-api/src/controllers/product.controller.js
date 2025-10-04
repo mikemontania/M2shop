@@ -1,4 +1,4 @@
-const { Product, Category } = require('../models');
+const { Product, Category, Discount } = require('../models');
 const { Op } = require('sequelize');
 
 async function list(req, res) {
@@ -17,18 +17,87 @@ async function list(req, res) {
   }
 
   const items = await Product.findAll({ include, where, order: [["created_at", "DESC"]] });
+  // Calcular descuento PRODUCT vigente y precio final
+  const now = new Date();
+  for (const it of items) {
+    const pd = await Discount.findOne({
+      where: {
+        type: 'PRODUCT',
+        [Op.and]: [
+          { start_date: { [Op.lte]: now } },
+          { end_date: { [Op.gte]: now } },
+        ],
+        [Op.or]: [
+          { product_id: it.id },
+          {
+            product_id: null,
+            sku_from: { [Op.lte]: it.id },
+            sku_to: { [Op.gte]: it.id },
+          },
+        ],
+      }
+    });
+    const price = Number(it.price);
+    const percent = pd ? Number(pd.value) : 0;
+    it.setDataValue('discount_percent', percent);
+    it.setDataValue('price_with_discount', percent > 0 ? price * (1 - percent / 100) : price);
+  }
   res.json(items);
 }
 
 async function get(req, res) {
   const item = await Product.findByPk(req.params.id, { include: Category });
   if (!item) return res.status(404).json({ message: 'Product not found' });
+  const now = new Date();
+  const pd = await Discount.findOne({
+    where: {
+      type: 'PRODUCT',
+      [Op.and]: [
+        { start_date: { [Op.lte]: now } },
+        { end_date: { [Op.gte]: now } },
+      ],
+      [Op.or]: [
+        { product_id: item.id },
+        {
+          product_id: null,
+          sku_from: { [Op.lte]: item.id },
+          sku_to: { [Op.gte]: item.id },
+        },
+      ],
+    },
+  });
+  const price = Number(item.price);
+  const percent = pd ? Number(pd.value) : 0;
+  item.setDataValue('discount_percent', percent);
+  item.setDataValue('price_with_discount', percent > 0 ? price * (1 - percent / 100) : price);
   res.json(item);
 }
 
 async function getBySlug(req, res) {
   const item = await Product.findOne({ where: { slug: req.params.slug }, include: Category });
   if (!item) return res.status(404).json({ message: 'Product not found' });
+  const now = new Date();
+  const pd = await Discount.findOne({
+    where: {
+      type: 'PRODUCT',
+      [Op.and]: [
+        { start_date: { [Op.lte]: now } },
+        { end_date: { [Op.gte]: now } },
+      ],
+      [Op.or]: [
+        { product_id: item.id },
+        {
+          product_id: null,
+          sku_from: { [Op.lte]: item.id },
+          sku_to: { [Op.gte]: item.id },
+        },
+      ],
+    },
+  });
+  const price = Number(item.price);
+  const percent = pd ? Number(pd.value) : 0;
+  item.setDataValue('discount_percent', percent);
+  item.setDataValue('price_with_discount', percent > 0 ? price * (1 - percent / 100) : price);
   res.json(item);
 }
 
