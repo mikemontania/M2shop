@@ -11,6 +11,7 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Locations from './pages/Locations';
+import Login from './pages/Login';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
               <Route path="/nosotros" element={<About />} />
               <Route path="/contacto" element={<Contact />} />
               <Route path="/ubicaciones" element={<Locations />} />
+              <Route path="/login" element={<Login />} />
             </Routes>
           </main>
           <Footer />

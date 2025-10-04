@@ -1,7 +1,7 @@
 const { sequelize, Order, OrderItem, Product } = require('../models');
 
 async function create(req, res) {
-  const { customer_name, customer_email, customer_phone, shipping_address, items } = req.body;
+  const { customer_id, customer_name, customer_email, customer_phone, shipping_address, items } = req.body;
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'Order items are required' });
   }
@@ -9,6 +9,7 @@ async function create(req, res) {
   const trx = await sequelize.transaction();
   try {
     const order = await Order.create({
+      customer_id: customer_id || null,
       customer_name,
       customer_email,
       customer_phone,
@@ -43,4 +44,29 @@ async function create(req, res) {
   }
 }
 
-module.exports = { create };
+async function listMy(req, res) {
+  const customerId = Number(req.params.customerId);
+  if (!customerId) return res.status(400).json({ message: 'customerId requerido' });
+  const orders = await Order.findAll({ where: { customer_id: customerId }, order: [["created_at", "DESC"]] });
+  res.json(orders);
+}
+
+async function repeat(req, res) {
+  const id = Number(req.params.id);
+  const original = await Order.findByPk(id, { include: [{ model: Product }] });
+  if (!original) return res.status(404).json({ message: 'Pedido no encontrado' });
+  // Nota: para simplificar, duplicamos sin validar stock aquí
+  const items = await OrderItem.findAll({ where: { order_id: id } });
+  const payload = {
+    customer_id: original.customer_id || null,
+    customer_name: original.customer_name,
+    customer_email: original.customer_email,
+    customer_phone: original.customer_phone,
+    shipping_address: original.shipping_address,
+    items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity }))
+  };
+  req.body = payload;
+  return create(req, res);
+}
+
+module.exports = { create, listMy, repeat };

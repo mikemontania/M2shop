@@ -18,7 +18,7 @@ export default function Header() {
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo">
-              <h1>CAVALLARO</h1>
+              <img src="https://www.cavallaro.com.py/assets/icons/logo.png" alt="Cavallaro" height={48} />
             </Link>
 
             <nav className="main-nav">
@@ -30,6 +30,7 @@ export default function Header() {
             </nav>
 
             <div className="header-actions">
+              <Link to="/login" className="login-link">Iniciar sesión</Link>
               <Link to="/carrito" className="cart-button">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="9" cy="21" r="1"/>

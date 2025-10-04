@@ -28,12 +28,18 @@ export interface OrderCreateDto {
   items: Array<{ product_id: number; quantity: number }>;
 }
 
+export interface LoginDto { email: string; password: string }
+export interface RegisterDto { firstName: string; lastName: string; email: string; phone?: string; password: string }
+
+let authToken: string | null = null;
+
 const json = (res: Response) => {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 };
 
 export const Api = {
+  setToken(token: string | null) { authToken = token },
   async listCategories(): Promise<CategoryDto[]> {
     return fetch('/api/categories').then(json);
   },
@@ -54,8 +60,22 @@ export const Api = {
   async createOrder(payload: OrderCreateDto) {
     return fetch('/api/orders', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}) },
       body: JSON.stringify(payload),
     }).then(json);
+  },
+  async login(payload: LoginDto) {
+    const data = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(json);
+    this.setToken(data.token);
+    return data;
+  },
+  async register(payload: RegisterDto) {
+    const data = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(json);
+    this.setToken(data.token);
+    return data;
+  },
+  async me() {
+    if (!authToken) return null;
+    return fetch('/api/auth/me', { headers: { Authorization: `Bearer ${authToken}` } }).then(json);
   }
 };
