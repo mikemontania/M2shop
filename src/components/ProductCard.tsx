@@ -31,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link to={`/producto/${product.slug}`} className="product-card">
       <div className="product-image">
-        <img src={product.image_url} alt={product.name} onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-product.jpg'; }} />
+        <img src={product.image_url} alt={product.name} onError={(e) => { (e.target as HTMLImageElement).src = 'https://cdn.cavallaro.com.py/productos/300000918.jpg'; }} />
         {product.is_new && <span className="badge badge-new">Nuevo</span>}
         {product.is_featured && <span className="badge badge-featured">Destacado</span>}
 

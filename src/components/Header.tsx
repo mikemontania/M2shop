@@ -20,7 +20,7 @@ export default function Header() {
         <div className="container">
           <div className="header-content">
             <Link to="/" className="logo">
-              <img src="https://www.cavallaro.com.py/assets/icons/logo.png" alt="Cavallaro" height={48} onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-logo.png'; }} />
+              <img src="https://www.cavallaro.com.py/img/logo-web-blanco.png" alt="Cavallaro" height={48} onError={(e) => { (e.target as HTMLImageElement).src = '/fallback-logo.png'; }} />
             </Link>
 
             <nav className="main-nav">
