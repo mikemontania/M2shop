@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 
 export default function Header() {
   const { cartCount } = useCart();
+  const { user, logout } = useAuth();
 
   return (
     <header className="header">
@@ -30,7 +32,14 @@ export default function Header() {
             </nav>
 
             <div className="header-actions">
-              <Link to="/login" className="login-link">Iniciar sesión</Link>
+              {user ? (
+                <>
+                  <Link to="/mis-pedidos" className="login-link">Mis pedidos</Link>
+                  <button onClick={logout} className="btn btn-secondary">Salir</button>
+                </>
+              ) : (
+                <Link to="/login" className="login-link">Iniciar sesión</Link>
+              )}
               <Link to="/carrito" className="cart-button">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="9" cy="21" r="1"/>

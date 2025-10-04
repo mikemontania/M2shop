@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { CartProvider } from './contexts/CartContext';
+import { AuthProvider } from './contexts/AuthContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -12,10 +13,12 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Locations from './pages/Locations';
 import Login from './pages/Login';
+import MyOrders from './pages/MyOrders';
 
 function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
       <CartProvider>
         <div className="app">
           <Header />
@@ -31,11 +34,13 @@ function App() {
               <Route path="/contacto" element={<Contact />} />
               <Route path="/ubicaciones" element={<Locations />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/mis-pedidos" element={<MyOrders />} />
             </Routes>
           </main>
           <Footer />
         </div>
       </CartProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

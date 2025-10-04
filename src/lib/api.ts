@@ -13,6 +13,8 @@ export interface ProductDto {
   name: string;
   slug: string;
   description: string;
+  recommended_uses?: string;
+  properties?: string;
   price: number;
   image_url: string;
   stock: number;

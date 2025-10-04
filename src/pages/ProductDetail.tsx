@@ -83,6 +83,20 @@ export default function ProductDetail() {
               <p>{product.description}</p>
             </div>
 
+            {product.recommended_uses && (
+              <div className="product-description">
+                <h3>Usos recomendados</h3>
+                <p>{product.recommended_uses}</p>
+              </div>
+            )}
+
+            {product.properties && (
+              <div className="product-description">
+                <h3>Propiedades</h3>
+                <p>{product.properties}</p>
+              </div>
+            )}
+
             <div className="product-stock">
               {product.stock > 0 ? (
                 <span className="in-stock">En stock ({product.stock} disponibles)</span>
