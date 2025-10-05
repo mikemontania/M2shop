@@ -10,10 +10,11 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import About from './pages/About';
-import Contact from './pages/Contact';
+import Contact from './pages/Empresa';
 import Locations from './pages/Locations';
 import Login from './pages/Login';
 import MyOrders from './pages/MyOrders';
+import Empresa from './pages/Empresa';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
               <Route path="/pedido-confirmado" element={<OrderConfirmation />} />
               <Route path="/nosotros" element={<About />} />
               <Route path="/contacto" element={<Contact />} />
+               <Route path="/empresa" element={<Empresa />} />
               <Route path="/ubicaciones" element={<Locations />} />
               <Route path="/login" element={<Login />} />
               <Route path="/mis-pedidos" element={<MyOrders />} />

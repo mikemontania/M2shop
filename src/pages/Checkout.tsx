@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Api } from '../lib/api';
 
 export default function Checkout() {
-  const { cart, cartSubtotal, cartDiscount, cartTotal, clearCart } = useCart();
+  const { cart, cartSubtotal, cartDiscount, cartTotal, cartIva, cartTotalWithIva, computedLinesByProductId, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -133,18 +133,18 @@ export default function Checkout() {
             <h2>Resumen del Pedido</h2>
 
             <div className="summary-items">
-              {cart.map((item) => (
-                <div key={item.productId} className="summary-item">
-                  <span>
-                    {item.product.name} x {item.quantity}
-                  </span>
-                  <span>
-                    {formatPrice(((item.product.discount_percent ?? 0) > 0
-                      ? Math.round(item.product.price * (1 - (item.product.discount_percent as number) / 100))
-                      : item.product.price) * item.quantity)}
-                  </span>
-                </div>
-              ))}
+              {cart.map((item) => {
+                const comp = computedLinesByProductId[item.productId];
+                const lineTotal = comp ? comp.finalLineAmount : item.product.price * item.quantity;
+                return (
+                  <div key={item.productId} className="summary-item">
+                    <span>
+                      {item.product.name} x {item.quantity}
+                    </span>
+                    <span>{formatPrice(lineTotal)}</span>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="summary-row">
@@ -158,9 +158,13 @@ export default function Checkout() {
               </div>
             )}
 
+            <div className="summary-row">
+              <span>IVA:</span>
+              <span>{formatPrice(cartIva)}</span>
+            </div>
             <div className="summary-total">
-              <span>Total:</span>
-              <span>{formatPrice(cartTotal)}</span>
+              <span>Total a pagar:</span>
+              <span>{formatPrice(cartTotalWithIva)}</span>
             </div>
           </div>
         </div>

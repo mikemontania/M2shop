@@ -16,6 +16,7 @@ export interface ProductDto {
   recommended_uses?: string;
   properties?: string;
   price: number;
+  iva?: number;
   image_url: string;
   stock: number;
   is_featured: boolean;
@@ -25,6 +26,7 @@ export interface ProductDto {
 }
 
 export interface OrderCreateDto {
+  customer_id?: number;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -47,6 +49,9 @@ export const Api = {
   async listCategories(): Promise<CategoryDto[]> {
     return fetch('/api/categories').then(json);
   },
+  async listDiscounts(): Promise<any[]> {
+    return fetch('/api/discounts').then(json);
+  },
   async listProducts(params?: { category_slug?: string; is_featured?: boolean; is_new?: boolean; search?: string }): Promise<ProductDto[]> {
     const url = new URL('/api/products', window.location.origin);
     if (params) {
@@ -57,6 +62,10 @@ export const Api = {
       });
     }
     return fetch(url.toString()).then(json);
+  },
+  // Orders listing for MyOrders page
+  async listMyOrders(customerId: number) {
+    return fetch(`/api/orders/my/${customerId}`).then(json);
   },
   async getProductBySlug(slug: string): Promise<ProductDto> {
     return fetch(`/api/products/slug/${slug}`).then(json);
