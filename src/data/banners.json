@@ -1,0 +1,40 @@
+[
+  {
+    "id": 1,
+    "title": "Nueva Colección Otoño 2024",
+    "subtitle": "Elegancia y estilo en cada prenda",
+    "image": "https://www.cavallaro.com.py/cdn/shop/files/BANNER_WEB.jpg?v=1768840115",
+    "url": "/",
+    "active": true,
+    "order": 1
+  },
+  {
+    "id": 2,
+    "title": "Hasta 40% de Descuento",
+    "subtitle": "En productos seleccionados",
+    "image": "https://www.cavallaro.com.py/cdn/shop/files/banner-kchiporro.png?v=1765803687",
+    "url": "/",
+    "active": true,
+    "order": 2
+  },
+  {
+    "id": 3,
+    "title": "Calzados Premium",
+    "subtitle": "Comodidad y distinción",
+    "image": "https://www.cavallaro.com.py/cdn/shop/files/BANNER-CAVAPUNTOS600.jpg?v=1758890407",
+    "url": "/",
+    "active": true,
+    "order": 3
+  },
+  {
+    "id": 4,
+    "title": "Calzados Premium",
+    "subtitle": "Comodidad y distinción",
+    "image": "https://www.cavallaro.com.py/cdn/shop/files/banner-3.jpg?v=1754147528",
+    "url": "/",
+    "active": true,
+    "order": 4
+  }
+]
+
+ 

@@ -1,44 +1,66 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const morgan = require("morgan");
 const { dbConnection } = require("./dbconfig");
-// Registrar modelos (asociaciones) antes de sync
-require("./src/models");
 const { populateDB } = require("./dbinit");
 
+const morgan = require("morgan");
+ 
 const app = express();
 
+//middlewares
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(cors());
 
-// Healthcheck
-app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "m2shop-api" });
-});
+// ✅ CONFIGURACIÓN CORS CORREGIDA
+const corsOptions = {
+  origin: function(origin, callback) {
+    // Permitir requests sin origin (p.ej: Postman) o desde cualquier origen
+    if (!origin) {
+      callback(null, true); // ✅ Cambié "origin" por "true"
+    } else {
+      callback(null, true); // ✅ Permitir todos los orígenes
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization",
+    "x-session-id" // ✅ AGREGADO: Permitir enviar este header
+  ],
+  exposedHeaders: ["x-session-id"], // ✅ AGREGADO: Permitir leer este header
+  credentials: true
+};
 
-// Rutas
-app.use("/M2POS/ejemplo", require("./src/routes/ejemplo-routes"));
-app.use("/api/categories", require("./src/routes/category.routes"));
-app.use("/api/products", require("./src/routes/product.routes"));
-app.use("/api/orders", require("./src/routes/order.routes"));
-app.use("/api/auth", require("./src/routes/auth.routes"));
-app.use("/api/discounts", require("./src/routes/discount.routes"));
+// Aplicar CORS antes de las rutas
+app.use(cors(corsOptions)); 
 
+// Base de datos
 const dbSetup = async () => {
   await dbConnection();
   await populateDB();
 };
+dbSetup(); 
 
-// Inicializar DB y luego arrancar servidor
-(async () => {
-  try {
-    await dbSetup();
-    const port = process.env.PORT || 3000;
-    app.listen(port, () => console.log("Servidor corriendo en puerto " + port));
-  } catch (err) {
-    console.error("Fallo al iniciar el servidor", err);
-    process.exit(1);
-  }
-})();
+app.use("/M2SHOP/auth", require("./src/routes/auth-routes")); 
+app.use("/M2SHOP/banners", require("./src/routes/banners-routes")); 
+app.use("/M2SHOP/carrito", require("./src/routes/carritos-routes"));
+app.use("/M2SHOP/categorias", require("./src/routes/categorias-routes"));
+app.use("/M2SHOP/configuraciones", require("./src/routes/configuraciones-routes"));
+app.use("/M2SHOP/cupones", require("./src/routes/cupones-routes"));
+app.use("/M2SHOP/direcciones", require("./src/routes/direcciones-routes"));
+app.use("/M2SHOP/estadisticas", require("./src/routes/estadisticas-routes"));
+app.use("/M2SHOP/lista-deseos", require("./src/routes/listaDeseos-routes"));
+app.use("/M2SHOP/marcas", require("./src/routes/marcas-routes"));
+app.use("/M2SHOP/metodos-envio", require("./src/routes/metodosEnvio-routes"));
+app.use("/M2SHOP/pedidos", require("./src/routes/pedidos-routes"));
+app.use("/M2SHOP/productos", require("./src/routes/productos-routes"));
+app.use("/M2SHOP/producto-admin", require("./src/routes/productoAmin-routes"));
+app.use("/M2SHOP/resenas", require("./src/routes/resenas-routes")); 
+app.use("/M2SHOP/tarjetas", require("./src/routes/tarjetas-routes")); 
+app.use("/M2SHOP/usuarios", require("./src/routes/usuarios-routes")); 
+app.use("/M2SHOP/variantes", require("./src/routes/variantes-routes"));  
+
+app.listen(process.env.PORT, () =>
+  console.log("Servidor corriendo en puerto " + process.env.PORT)
+);

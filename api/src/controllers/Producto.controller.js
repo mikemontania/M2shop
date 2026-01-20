@@ -1,0 +1,1251 @@
+const { Op } = require("sequelize")
+const Producto = require("../models/Producto.models")
+const Categoria = require("../models/Categoria.models")
+const Marca = require("../models/Marca.models")
+const Variante = require("../models/Variante.models")
+const VarianteAtributo = require("../models/VarianteAtributo.models")
+const ValorAtributo = require("../models/ValorAtributo.models")
+const Atributo = require("../models/Atributo.models")
+const Descuento = require("../models/Descuento.models")
+const { sequelize } = require("../../dbconfig")
+const moment = require('moment');
+
+
+/**
+ * Procesa las variantes para incluir información de atributos concatenada
+ * y extraer variedad (con color) y presentación (con imagen)
+ */
+const procesarVariantes = (variantes) => {
+  return variantes.map(variante => {
+    const varianteObj = variante.toJSON();
+    
+    // Arrays para construir el nombre completo
+    const atributosOrdenados = [];
+    let variedad = null;
+    let variedadColor = null;
+    let presentacion = null;
+    let presentacionImagen = null;
+
+    if (varianteObj.atributos && varianteObj.atributos.length > 0) {
+      // Ordenar atributos por orden
+      const atributosSort = [...varianteObj.atributos].sort((a, b) => a.orden - b.orden);
+      
+      atributosSort.forEach(va => {
+        if (va.valorAtributo) {
+          const nombreAtributo = va.valorAtributo.atributo?.nombre?.toLowerCase();
+          const valorTexto = va.valorAtributo.valor;
+          
+          // Agregar al nombre completo
+          atributosOrdenados.push(valorTexto);
+          
+          // Detectar variedad (con color)
+          if (nombreAtributo === 'variedad') {
+            variedad = valorTexto;
+            if (va.valorAtributo.propiedades?.color) {
+              variedadColor = va.valorAtributo.propiedades.color;
+            }
+          }
+          
+          // Detectar presentación (con imagen)
+          if (nombreAtributo === 'presentacion' || nombreAtributo === 'presentación') {
+            presentacion = valorTexto;
+            if (va.valorAtributo.propiedades?.imagen) {
+              presentacionImagen = va.valorAtributo.propiedades.imagen;
+            }
+          }
+        }
+      });
+    }
+
+    // Construir nombre completo: "Producto - Atributo1 - Atributo2"
+    const nombreBase = varianteObj.producto?.nombre || 'Producto';
+    const nombreCompleto = atributosOrdenados.length > 0
+      ? `${nombreBase} - ${atributosOrdenados.join(' - ')}`
+      : nombreBase;
+
+    return {
+      ...varianteObj,
+      nombreCompleto,
+      variedad,
+      variedadColor,
+      presentacion,
+      presentacionImagen
+    };
+  });
+};
+// ========== INCLUDES COMUNES ==========
+const includesCompletos = [
+  {
+    model: Producto,
+    as: 'producto',
+    attributes: ['id', 'nombre', 'slug', 'descripcion', 'categoriaId'],
+    include: [
+      {
+        model: Categoria,
+        as: 'categoria',
+        attributes: ['id', 'nombre', 'slug', 'imagenUrl', 'bannerUrl']
+      }
+    ]
+  },
+  {
+    model: VarianteAtributo,
+    as: 'atributos',
+    include: [
+      {
+        model: ValorAtributo,
+        as: 'valorAtributo',
+        attributes: ['id', 'valor', 'propiedades'],
+        include: [
+          {
+            model: Atributo,
+            as: 'atributo',
+            attributes: ['id', 'nombre', 'orden']
+          }
+        ]
+      }
+    ]
+  }
+];
+ 
+// ========== OBTENER VARIANTES DESTACADAS (para Home) ==========
+/*   const getDestacados = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 12;
+    
+    const variantes = await Variante.findAll({
+      where: { 
+        destacado: true,
+        activo: true 
+      },
+      include: includesCompletos,
+      order: [['created_at', 'DESC']],
+      limit
+    });
+
+    const variantesProcesadas = procesarVariantes(variantes);
+
+    res.json({
+      success: true,
+      data: variantesProcesadas,
+      count: variantesProcesadas.length
+    });
+  } catch (error) {
+    console.error('Error al obtener variantes destacadas:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener variantes destacadas',
+      error: error.message 
+    });
+  }
+}; */
+ 
+// ========== OBTENER NOVEDADES (para Home) ==========
+/* const getNovedades = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 12;
+    
+    const variantes = await Variante.findAll({
+      where: { 
+        activo: true
+      },
+      include: includesCompletos,
+      order: [['created_at', 'DESC']],
+      limit
+    });
+
+    const variantesProcesadas = procesarVariantes(variantes);
+
+    res.json({
+      success: true,
+      data: variantesProcesadas,
+      count: variantesProcesadas.length
+    });
+  } catch (error) {
+    console.error('Error al obtener novedades:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener novedades',
+      error: error.message 
+    });
+  }
+}; */
+
+// ========== OBTENER VARIANTES POR CATEGORÍA (para Home) ==========
+ const getByCategoriaHome = async (req, res) => {
+  try {
+    const { categoriaId } = req.params;
+    const limit = parseInt(req.query.limit) || 12;
+
+    const variantes = await Variante.findAll({
+      where: { 
+        activo: true
+      },
+      include: [
+        {
+          model: Producto,
+          as: 'producto',
+          where: { categoriaId },
+          attributes: ['id', 'nombre', 'slug', 'descripcion', 'categoriaId'],
+          include: [
+            {
+              model: Categoria,
+              as: 'categoria',
+              attributes: ['id', 'nombre', 'slug', 'imagenUrl', 'bannerUrl']
+            }
+          ]
+        },
+        {
+          model: VarianteAtributo,
+          as: 'atributos',
+          include: [
+            {
+              model: ValorAtributo,
+              as: 'valorAtributo',
+              attributes: ['id', 'valor', 'propiedades'],
+              include: [
+                {
+                  model: Atributo,
+                  as: 'atributo',
+                  attributes: ['id', 'nombre', 'orden']
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      order: [['created_at', 'DESC']],
+      limit
+    });
+
+    const variantesProcesadas = procesarVariantes(variantes);
+
+    res.json({
+      success: true,
+      data: variantesProcesadas,
+      count: variantesProcesadas.length
+    });
+  } catch (error) {
+    console.error('Error al obtener variantes por categoría:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener variantes por categoría',
+      error: error.message 
+    });
+  }
+};
+
+// ========== OBTENER VARIANTE POR ID ==========
+const getById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const variante = await Variante.findOne({
+      where: { id, activo: true },
+      include: includesCompletos
+    });
+
+    if (!variante) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Variante no encontrada' 
+      });
+    }
+
+    const [varianteProcesada] = procesarVariantes([variante]);
+
+    res.json({
+      success: true,
+      data: varianteProcesada
+    });
+  } catch (error) {
+    console.error('Error al obtener variante:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener variante',
+      error: error.message 
+    });
+  }
+};
+
+// ========== OBTENER VARIANTE POR SLUG ==========
+const getBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const variante = await Variante.findOne({
+      where: { slug, activo: true },
+      include: includesCompletos
+    });
+
+    if (!variante) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Variante no encontrada' 
+      });
+    }
+
+    const [varianteProcesada] = procesarVariantes([variante]);
+
+    res.json({
+      success: true,
+      data: varianteProcesada
+    });
+  } catch (error) {
+    console.error('Error al obtener variante:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener variante',
+      error: error.message 
+    });
+  }
+};
+
+// ========== OBTENER TODAS LAS VARIANTES DE UN PRODUCTO ==========
+const getVariantesByProducto = async (req, res) => {
+  try {
+    const { productoId } = req.params;
+
+    const variantes = await Variante.findAll({
+      where: { 
+        productoId,
+        activo: true
+      },
+      include: includesCompletos,
+      order: [['orden', 'ASC'], ['id', 'ASC']]
+    });
+
+    const variantesProcesadas = procesarVariantes(variantes);
+
+    res.json({
+      success: true,
+      data: variantesProcesadas,
+      count: variantesProcesadas.length
+    });
+  } catch (error) {
+    console.error('Error al obtener variantes del producto:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener variantes del producto',
+      error: error.message 
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+/**
+ * Genera el nombre de una variante concatenando el nombre del producto
+ * con los valores de sus atributos ordenados
+ */
+const generarNombreVariante = (producto, atributos) => {
+  if (!atributos || atributos.length === 0) {
+    return producto.nombre
+  }
+
+  // Ordenar atributos por el orden del atributo y luego por el orden de la variante
+  const atributosOrdenados = atributos.sort((a, b) => {
+    const ordenAtributoA = a.valorAtributo?.atributo?.orden || 0
+    const ordenAtributoB = b.valorAtributo?.atributo?.orden || 0
+    if (ordenAtributoA !== ordenAtributoB) {
+      return ordenAtributoA - ordenAtributoB
+    }
+    return (a.orden || 0) - (b.orden || 0)
+  })
+
+  // Concatenar nombre del producto con valores de atributos
+  const partesNombre = [producto.nombre]
+  atributosOrdenados.forEach((attr) => {
+    if (attr.valorAtributo?.valor) {
+      partesNombre.push(attr.valorAtributo.valor)
+    }
+  })
+
+  return partesNombre.join(" ")
+}
+
+/**
+ * Genera un slug a partir de un texto
+ */
+const generarSlug = (texto) => {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
+    .replace(/[^a-z0-9\s-]/g, "") // Eliminar caracteres especiales
+    .trim()
+    .replace(/\s+/g, "-") // Reemplazar espacios con guiones
+    .replace(/-+/g, "-") // Eliminar guiones duplicados
+}
+
+/**
+ * Transforma los datos del backend al formato esperado por el frontend
+ */
+const transformarVarianteParaFrontend = (variante, producto) => {
+  const nombreCompleto = generarNombreVariante(producto, variante.atributos)
+
+  // Generar slug si no existe
+  let slug = variante.slug
+  if (!slug || slug.trim() === "") {
+    slug = generarSlug(nombreCompleto)
+  }
+
+  // Extraer sizes y colors de los atributos
+  const sizes = []
+  const colors = []
+
+  if (variante.atributos) {
+    variante.atributos.forEach((attr) => {
+      const nombreAtributo = attr.valorAtributo?.atributo?.nombre?.toLowerCase()
+      const valor = attr.valorAtributo?.valor
+
+      if (nombreAtributo === "presentacion" || nombreAtributo === "presentación" || nombreAtributo === "tamaño") {
+        if (valor && !sizes.includes(valor)) {
+          sizes.push(valor)
+        }
+      } else if (nombreAtributo === "color") {
+        if (valor && !colors.includes(valor)) {
+          colors.push(valor)
+        }
+      }
+    })
+  }
+
+  // Si no hay sizes o colors, agregar valores por defecto
+  if (sizes.length === 0) sizes.push("Único")
+  if (colors.length === 0) colors.push("Único")
+
+  return {
+    id: variante.id,
+    name: nombreCompleto,
+    slug: slug,
+    category: producto.categoria?.slug || producto.categoria?.nombre || "",
+    subcategory: producto.subcategoria?.slug || producto.subcategoria?.nombre || null,
+    price: Number.parseFloat(variante.precio),
+    originalPrice: variante.precioOriginal
+      ? Number.parseFloat(variante.precioOriginal)
+      : Number.parseFloat(variante.precio),
+    image: variante.imagenUrl || "/placeholder.svg",
+    images: variante.images || [variante.imagenUrl || "/placeholder.svg"],
+    description: producto.descripcion || "",
+    descripcion: producto.descripcion || "",
+    propiedades: producto.propiedades || [],
+    usosRecomendados: producto.usosRecomendados || [],
+    sizes: sizes,
+    colors: colors,
+    featured: variante.destacado || false,
+    nuevo: variante.nuevo || false,
+    stock: variante.stock || 0,
+    sku: variante.sku,
+    // Datos adicionales que pueden ser útiles
+    productoId: producto.id,
+    varianteId: variante.id,
+    categoryName: producto.categoria?.nombre || "",
+    subcategoryName: producto.subcategoria?.nombre || null,
+  }
+}
+
+/**
+ * Listar productos con paginación y filtros
+ * Retorna variantes transformadas al formato del frontend
+ */
+const listar = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      categoriaId,
+      categoriaSlug,
+      marcaId,
+      destacado,
+      nuevo,
+      buscar,
+      precioMin,
+      precioMax,
+      ordenar = "createdAt",
+      orden = "DESC",
+    } = req.query
+
+    const offset = (page - 1) * limit
+    const where = { activo: true }
+
+    // Filtro por categoría
+    if (categoriaId) {
+      where.categoriaId = categoriaId
+    } else if (categoriaSlug) {
+      // Buscar categoría por slug
+      const categoria = await Categoria.findOne({ where: { slug: categoriaSlug, activo: true } })
+      if (categoria) {
+        where.categoriaId = categoria.id
+      }
+    }
+
+    // Filtro por búsqueda
+    if (buscar) {
+      where[Op.or] = [{ nombre: { [Op.like]: `%${buscar}%` } }, { descripcion: { [Op.like]: `%${buscar}%` } }]
+    }
+
+    // Filtros para variantes
+    const varianteWhere = { activo: true }
+    if (destacado !== undefined) varianteWhere.destacado = destacado === "true"
+    if (nuevo !== undefined) varianteWhere.nuevo = nuevo === "true"
+    if (precioMin || precioMax) {
+      varianteWhere.precio = {}
+      if (precioMin) varianteWhere.precio[Op.gte] = precioMin
+      if (precioMax) varianteWhere.precio[Op.lte] = precioMax
+    }
+
+    // Obtener productos con sus variantes
+    const { count, rows } = await Producto.findAndCountAll({
+      where,
+      include: [
+        {
+          model: Categoria,
+          as: "categoria",
+          attributes: ["id", "nombre", "slug"],
+        },
+        {
+          model: Categoria,
+          as: "subcategoria",
+          attributes: ["id", "nombre", "slug"],
+          required: false,
+        },
+        {
+          model: Variante,
+          as: "variantes",
+          where: varianteWhere,
+          required: true, // Solo productos con variantes activas
+          include: [
+            {
+              model: VarianteAtributo,
+              as: "atributos",
+              include: [
+                {
+                  model: ValorAtributo,
+                  as: "valorAtributo",
+                  include: [
+                    {
+                      model: Atributo,
+                      as: "atributo",
+                      attributes: ["id", "nombre", "orden"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      limit: Number.parseInt(limit),
+      offset: Number.parseInt(offset),
+      order: [[ordenar, orden]],
+      distinct: true,
+    })
+
+    // Transformar cada variante a formato frontend
+    const productosTransformados = []
+    rows.forEach((producto) => {
+      if (producto.variantes && producto.variantes.length > 0) {
+        producto.variantes.forEach((variante) => {
+          const productoFrontend = transformarVarianteParaFrontend(variante, producto)
+          productosTransformados.push(productoFrontend)
+        })
+      }
+    })
+
+    res.json({
+      total: productosTransformados.length,
+      totalProductos: count,
+      paginas: Math.ceil(productosTransformados.length / limit),
+      paginaActual: Number.parseInt(page),
+      productos: productosTransformados,
+    })
+  } catch (error) {
+    console.error("Error al listar productos:", error)
+    res.status(500).json({ mensaje: "Error al listar productos", error: error.message })
+  }
+}
+
+/**
+ * Obtener un producto por slug
+ * Retorna todas las variantes del producto transformadas
+ */
+const obtenerPorSlug = async (req, res) => {
+  try {
+    const { slug } = req.params
+
+    // Buscar por slug de producto o variante
+    const variante = await Variante.findOne({
+      where: { slug, activo: true },
+      include: [
+        {
+          model: Producto,
+          as: "producto",
+          include: [
+            {
+              model: Categoria,
+              as: "categoria",
+              attributes: ["id", "nombre", "slug"],
+            },
+            {
+              model: Categoria,
+              as: "subcategoria",
+              attributes: ["id", "nombre", "slug"],
+              required: false,
+            },
+          ],
+        },
+        {
+          model: VarianteAtributo,
+          as: "atributos",
+          include: [
+            {
+              model: ValorAtributo,
+              as: "valorAtributo",
+              include: [
+                {
+                  model: Atributo,
+                  as: "atributo",
+                  attributes: ["id", "nombre", "orden"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    if (!variante) {
+      // Si no se encuentra por slug de variante, buscar por slug de producto
+      const producto = await Producto.findOne({
+        where: { slug, activo: true },
+        include: [
+          {
+            model: Categoria,
+            as: "categoria",
+            attributes: ["id", "nombre", "slug"],
+          },
+          {
+            model: Categoria,
+            as: "subcategoria",
+            attributes: ["id", "nombre", "slug"],
+            required: false,
+          },
+          {
+            model: Variante,
+            as: "variantes",
+            where: { activo: true },
+            required: false,
+            include: [
+              {
+                model: VarianteAtributo,
+                as: "atributos",
+                include: [
+                  {
+                    model: ValorAtributo,
+                    as: "valorAtributo",
+                    include: [
+                      {
+                        model: Atributo,
+                        as: "atributo",
+                        attributes: ["id", "nombre", "orden"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+
+      if (!producto || !producto.variantes || producto.variantes.length === 0) {
+        return res.status(404).json({ mensaje: "Producto no encontrado" })
+      }
+
+      // Retornar la primera variante como principal y todas las variantes
+      const variantePrincipal = transformarVarianteParaFrontend(producto.variantes[0], producto)
+      const todasVariantes = producto.variantes.map((v) => transformarVarianteParaFrontend(v, producto))
+
+      return res.json({
+        ...variantePrincipal,
+        variantes: todasVariantes,
+      })
+    }
+
+    // Si se encontró la variante, retornarla transformada
+    const productoTransformado = transformarVarianteParaFrontend(variante, variante.producto)
+
+    // Obtener todas las variantes del mismo producto
+    const todasVariantes = await Variante.findAll({
+      where: { productoId: variante.producto.id, activo: true },
+      include: [
+        {
+          model: VarianteAtributo,
+          as: "atributos",
+          include: [
+            {
+              model: ValorAtributo,
+              as: "valorAtributo",
+              include: [
+                {
+                  model: Atributo,
+                  as: "atributo",
+                  attributes: ["id", "nombre", "orden"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    const variantesTransformadas = todasVariantes.map((v) => transformarVarianteParaFrontend(v, variante.producto))
+
+    res.json({
+      ...productoTransformado,
+      variantes: variantesTransformadas,
+    })
+  } catch (error) {
+    console.error("Error al obtener producto:", error)
+    res.status(500).json({ mensaje: "Error al obtener producto", error: error.message })
+  }
+}
+
+/**
+ * Obtener productos destacados
+ */
+const obtenerDestacados = async (req, res) => {
+  try {
+    const { limit = 12 } = req.query
+
+    const productos = await Producto.findAll({
+      where: { activo: true },
+      include: [
+        {
+          model: Categoria,
+          as: "categoria",
+          attributes: ["id", "nombre", "slug"],
+        },
+        {
+          model: Categoria,
+          as: "subcategoria",
+          attributes: ["id", "nombre", "slug"],
+          required: false,
+        },
+        {
+          model: Variante,
+          as: "variantes",
+          where: { activo: true, destacado: true },
+          required: true,
+          include: [
+            {
+              model: VarianteAtributo,
+              as: "atributos",
+              include: [
+                {
+                  model: ValorAtributo,
+                  as: "valorAtributo",
+                  include: [
+                    {
+                      model: Atributo,
+                      as: "atributo",
+                      attributes: ["id", "nombre", "orden"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      limit: Number.parseInt(limit),
+      order: [["createdAt", "DESC"]],
+    })
+
+    const productosTransformados = []
+    productos.forEach((producto) => {
+      if (producto.variantes && producto.variantes.length > 0) {
+        producto.variantes.forEach((variante) => {
+          const productoFrontend = transformarVarianteParaFrontend(variante, producto)
+          productosTransformados.push(productoFrontend)
+        })
+      }
+    })
+
+    res.json(productosTransformados)
+  } catch (error) {
+    console.error("Error al obtener destacados:", error)
+    res.status(500).json({ mensaje: "Error al obtener productos destacados", error: error.message })
+  }
+}
+
+/**
+ * Obtener productos nuevos
+ */
+const obtenerNuevos = async (req, res) => {
+  try {
+    const { limit = 12 } = req.query
+
+    const productos = await Producto.findAll({
+      where: { activo: true },
+      include: [
+        {
+          model: Categoria,
+          as: "categoria",
+          attributes: ["id", "nombre", "slug"],
+        },
+        {
+          model: Categoria,
+          as: "subcategoria",
+          attributes: ["id", "nombre", "slug"],
+          required: false,
+        },
+        {
+          model: Variante,
+          as: "variantes",
+          where: { activo: true, nuevo: true },
+          required: true,
+          include: [
+            {
+              model: VarianteAtributo,
+              as: "atributos",
+              include: [
+                {
+                  model: ValorAtributo,
+                  as: "valorAtributo",
+                  include: [
+                    {
+                      model: Atributo,
+                      as: "atributo",
+                      attributes: ["id", "nombre", "orden"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      limit: Number.parseInt(limit),
+      order: [["createdAt", "DESC"]],
+    })
+
+    const productosTransformados = []
+    productos.forEach((producto) => {
+      if (producto.variantes && producto.variantes.length > 0) {
+        producto.variantes.forEach((variante) => {
+          const productoFrontend = transformarVarianteParaFrontend(variante, producto)
+          productosTransformados.push(productoFrontend)
+        })
+      }
+    })
+
+    res.json(productosTransformados)
+  } catch (error) {
+    console.error("Error al obtener nuevos:", error)
+    res.status(500).json({ mensaje: "Error al obtener productos nuevos", error: error.message })
+  }
+}
+
+/**
+ * Obtener productos por categoría
+ */
+const obtenerPorCategoria = async (req, res) => {
+  try {
+    const { categoriaSlug } = req.params
+    const { limit = 12, page = 1 } = req.query
+
+    const categoria = await Categoria.findOne({ where: { slug: categoriaSlug, activo: true } })
+    if (!categoria) {
+      return res.status(404).json({ mensaje: "Categoría no encontrada" })
+    }
+
+    const offset = (page - 1) * limit
+
+    const { count, rows } = await Producto.findAndCountAll({
+      where: { categoriaId: categoria.id, activo: true },
+      include: [
+        {
+          model: Categoria,
+          as: "categoria",
+          attributes: ["id", "nombre", "slug"],
+        },
+        {
+          model: Categoria,
+          as: "subcategoria",
+          attributes: ["id", "nombre", "slug"],
+          required: false,
+        },
+        {
+          model: Variante,
+          as: "variantes",
+          where: { activo: true },
+          required: true,
+          include: [
+            {
+              model: VarianteAtributo,
+              as: "atributos",
+              include: [
+                {
+                  model: ValorAtributo,
+                  as: "valorAtributo",
+                  include: [
+                    {
+                      model: Atributo,
+                      as: "atributo",
+                      attributes: ["id", "nombre", "orden"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      limit: Number.parseInt(limit),
+      offset: Number.parseInt(offset),
+      order: [["createdAt", "DESC"]],
+      distinct: true,
+    })
+
+    const productosTransformados = []
+    rows.forEach((producto) => {
+      if (producto.variantes && producto.variantes.length > 0) {
+        producto.variantes.forEach((variante) => {
+          const productoFrontend = transformarVarianteParaFrontend(variante, producto)
+          productosTransformados.push(productoFrontend)
+        })
+      }
+    })
+
+    res.json({
+      total: productosTransformados.length,
+      totalProductos: count,
+      paginas: Math.ceil(productosTransformados.length / limit),
+      paginaActual: Number.parseInt(page),
+      productos: productosTransformados,
+      categoria: {
+        id: categoria.id,
+        nombre: categoria.nombre,
+        slug: categoria.slug,
+      },
+    })
+  } catch (error) {
+    console.error("Error al obtener productos por categoría:", error)
+    res.status(500).json({ mensaje: "Error al obtener productos por categoría", error: error.message })
+  }
+}
+
+/**
+ * Obtener productos por subcategoría
+ */
+const obtenerPorSubcategoria = async (req, res) => {
+  try {
+    const { subcategoriaSlug } = req.params
+    const { limit = 12, page = 1 } = req.query
+
+    const subcategoria = await Categoria.findOne({ where: { slug: subcategoriaSlug, activo: true } })
+    if (!subcategoria) {
+      return res.status(404).json({ mensaje: "Subcategoría no encontrada" })
+    }
+
+    const offset = (page - 1) * limit
+
+    const { count, rows } = await Producto.findAndCountAll({
+      where: { subcategoriaId: subcategoria.id, activo: true },
+      include: [
+        {
+          model: Categoria,
+          as: "categoria",
+          attributes: ["id", "nombre", "slug"],
+        },
+        {
+          model: Categoria,
+          as: "subcategoria",
+          attributes: ["id", "nombre", "slug"],
+          required: false,
+        },
+        {
+          model: Variante,
+          as: "variantes",
+          where: { activo: true },
+          required: true,
+          include: [
+            {
+              model: VarianteAtributo,
+              as: "atributos",
+              include: [
+                {
+                  model: ValorAtributo,
+                  as: "valorAtributo",
+                  include: [
+                    {
+                      model: Atributo,
+                      as: "atributo",
+                      attributes: ["id", "nombre", "orden"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      limit: Number.parseInt(limit),
+      offset: Number.parseInt(offset),
+      order: [["createdAt", "DESC"]],
+      distinct: true,
+    })
+
+    const productosTransformados = []
+    rows.forEach((producto) => {
+      if (producto.variantes && producto.variantes.length > 0) {
+        producto.variantes.forEach((variante) => {
+          const productoFrontend = transformarVarianteParaFrontend(variante, producto)
+          productosTransformados.push(productoFrontend)
+        })
+      }
+    })
+
+    res.json({
+      total: productosTransformados.length,
+      totalProductos: count,
+      paginas: Math.ceil(productosTransformados.length / limit),
+      paginaActual: Number.parseInt(page),
+      productos: productosTransformados,
+      subcategoria: {
+        id: subcategoria.id,
+        nombre: subcategoria.nombre,
+        slug: subcategoria.slug,
+      },
+    })
+  } catch (error) {
+    console.error("Error al obtener productos por subcategoría:", error)
+    res.status(500).json({ mensaje: "Error al obtener productos por subcategoría", error: error.message })
+  }
+}
+
+/**
+ * Crear producto (admin)
+ */
+const crear = async (req, res) => {
+  try {
+    const productoData = req.body
+
+    // Generar slug si no existe
+    if (!productoData.slug) {
+      productoData.slug = generarSlug(productoData.nombre)
+    }
+
+    const producto = await Producto.create(productoData)
+
+    res.status(201).json({ mensaje: "Producto creado exitosamente", producto })
+  } catch (error) {
+    console.error("Error al crear producto:", error)
+    res.status(500).json({ mensaje: "Error al crear producto", error: error.message })
+  }
+}
+
+/**
+ * Actualizar producto (admin)
+ */
+const actualizar = async (req, res) => {
+  try {
+    const { id } = req.params
+    const productoData = req.body
+
+    // Actualizar slug si cambió el nombre
+    if (productoData.nombre && !productoData.slug) {
+      productoData.slug = generarSlug(productoData.nombre)
+    }
+
+    const [updated] = await Producto.update(productoData, { where: { id } })
+
+    if (!updated) {
+      return res.status(404).json({ mensaje: "Producto no encontrado" })
+    }
+
+    const productoActualizado = await Producto.findByPk(id, {
+      include: [
+        { model: Categoria, as: "categoria" },
+        { model: Categoria, as: "subcategoria", required: false },
+        { model: Variante, as: "variantes" },
+      ],
+    })
+
+    res.json({ mensaje: "Producto actualizado", producto: productoActualizado })
+  } catch (error) {
+    console.error("Error al actualizar producto:", error)
+    res.status(500).json({ mensaje: "Error al actualizar producto", error: error.message })
+  }
+}
+
+/**
+ * Eliminar producto (soft delete)
+ */
+const eliminar = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const [updated] = await Producto.update({ activo: false }, { where: { id } })
+
+    if (!updated) {
+      return res.status(404).json({ mensaje: "Producto no encontrado" })
+    }
+
+    res.json({ mensaje: "Producto eliminado" })
+  } catch (error) {
+    console.error("Error al eliminar producto:", error)
+    res.status(500).json({ mensaje: "Error al eliminar producto", error: error.message })
+  }
+}
+
+
+
+
+
+// ========== OBTENER VARIANTES DESTACADAS ==========
+const getDestacados = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 12;
+    const productos = await getProductosParaCard({ destacado: true }, limit);
+
+    res.json({
+      success: true,
+      data: productos,
+      count: productos.length
+    });
+  } catch (error) {
+    console.error('Error al obtener destacados:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener variantes destacadas',
+      error: error.message
+    });
+  }
+};
+
+// ========== OBTENER NOVEDADES ==========
+const getNovedades = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 12;
+    const productos = await getProductosParaCard({}, limit);
+
+    res.json({
+      success: true,
+      data: productos,
+      count: productos.length
+    });
+  } catch (error) {
+    console.error('Error al obtener novedades:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener novedades',
+      error: error.message
+    });
+  }
+};
+ 
+const getProductosParaCard = async (where = {}, limit = 12) => {
+  const hoy = moment().format('YYYY-MM-DD');
+
+  // 1️⃣ Buscar variantes activas con includes
+  const variantes = await Variante.findAll({
+    where: { activo: true, ...where },
+    include: includesCompletos,
+    order: [['created_at', 'DESC']],
+    limit
+  });
+
+  // 2️⃣ Procesar las variantes para obtener variedad, presentación, etc.
+  const variantesProcesadas = procesarVariantes(variantes);
+
+  // 3️⃣ Buscar descuentos vigentes para esas variantes
+  const ids = variantesProcesadas.map(v => v.id);
+
+  const descuentos = await Descuento.findAll({
+    where: {
+      varianteId: { [Op.in]: ids },
+      activo: true,
+      fechaDesde: { [Op.lte]: hoy },
+      fechaHasta: { [Op.gte]: hoy }
+    }
+  });
+
+  // Crear un mapa de descuentos por variante
+  const descuentosMap = {};
+  descuentos.forEach(d => {
+    descuentosMap[d.varianteId] = d;
+  });
+
+  // 4️⃣ Transformar a formato ProductCard
+  const productos = variantesProcesadas.map(v => {
+    const descuento = descuentosMap[v.id];
+    let finalPrice = parseFloat(v.precio);
+    let originalPrice = 0;
+
+    if (descuento) {
+      originalPrice = finalPrice;
+
+      // Si el tipo de descuento es IMPORTE → resta valor
+      if (descuento.tipo === 'IMPORTE') {
+        finalPrice = Math.max(0, finalPrice - parseFloat(descuento.valor));
+      }
+
+      // Si el tipo es PRODUCTO → porcentaje (ej: 20 significa -20%)
+      if (descuento.tipo === 'PRODUCTO') {
+        finalPrice = finalPrice - (finalPrice * (parseFloat(descuento.valor) / 100));
+      }
+    }
+
+    return {
+      id: v.id,
+      name: v.nombreCompleto,
+      slug: v.slug,
+      image: v.imagenUrl || v.presentacionImagen,
+      price: finalPrice,
+      originalPrice,
+      stock: v.stock,
+      category: v.producto?.categoria?.nombre || '',
+      variety: v.variedad,
+      varietyColor: v.variedadColor,
+      presentation: v.presentacion,
+      presentationImage: v.presentacionImagen
+    };
+  });
+
+  return productos;
+};
+
+
+
+
+
+
+
+
+module.exports = {
+  crear,
+  listar,
+  obtenerPorSlug,
+  obtenerDestacados,
+  obtenerNuevos,
+  obtenerPorCategoria,
+  obtenerPorSubcategoria,
+  actualizar,
+  eliminar,
+
+
+  getVariantesByProducto,
+  getBySlug,
+  getById,
+  getByCategoriaHome,
+  getNovedades,
+  getDestacados
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "limpieza-y-desinfeccion-del-hogar",
+    "name": "Limpieza Y Desinfeccion Del Hogar",
+    "description": "",
+    "image": "https://cdn.cavallaro.com.py/ecommerce/limpieza_hogar.png",
+    "image2": "https://www.cavallaro.com.py/cdn/shop/files/LIMPIEZA-Y-DESINFECCION-DEL-HOGAR-1920x261.jpg?v=1765839337",
+    "slug": "limpieza-y-desinfeccion-del-hogar",
+    "subcategories": [
+      {
+        "id": "bolsa",
+        "name": "Bolsa",
+        "description": "",
+        "slug": "limpieza-y-desinfeccion-del-hogar-bolsa"
+      },
+      {
+        "id": "complementarios",
+        "name": "Complementarios",
+        "description": "",
+        "slug": "limpieza-y-desinfeccion-del-hogar-complementarios"
+      },
+      {
+        "id": "lavandina",
+        "name": "Lavandina",
+        "description": "",
+        "slug": "limpieza-y-desinfeccion-del-hogar-lavandina"
+      },
+      {
+        "id": "detergente",
+        "name": "Detergente",
+        "description": "",
+        "slug": "limpieza-y-desinfeccion-del-hogar-detergente"
+      },
+      {
+        "id": "desodorante",
+        "name": "Desodorante",
+        "description": "",
+        "slug": "limpieza-y-desinfeccion-del-hogar-desodorante"
+      },
+      {
+        "id": "limpiador",
+        "name": "Limpiador",
+        "description": "",
+        "slug": "limpieza-y-desinfeccion-del-hogar-limpiador"
+      }
+    ]
+  },
+  {
+    "id": "cuidado-de-las-prendas",
+    "name": "Cuidado De Las Prendas",
+    "description": "",
+    "image": "https://cdn.cavallaro.com.py/ecommerce/higiene_personal.png",
+    "image2": "https://www.cavallaro.com.py/cdn/shop/files/CUIDADO.DE.PRENDAS-1920x261.jpg?v=1765839303",
+    "slug": "cuidado-de-las-prendas",
+    "subcategories": [
+      {
+        "id": "jabon-en-polvo",
+        "name": "Jabon En Polvo",
+        "description": "",
+        "slug": "cuidado-de-las-prendas-jabon-en-polvo"
+      },
+      {
+        "id": "coco-puro",
+        "name": "Coco Puro",
+        "description": "",
+        "slug": "cuidado-de-las-prendas-coco-puro"
+      },
+      {
+        "id": "suavizante",
+        "name": "Suavizante",
+        "description": "",
+        "slug": "cuidado-de-las-prendas-suavizante"
+      },
+      {
+        "id": "jabon-de-lavar",
+        "name": "Jabon De Lavar",
+        "description": "",
+        "slug": "cuidado-de-las-prendas-jabon-de-lavar"
+      },
+      {
+        "id": "jabon-prensado",
+        "name": "Jabon Prensado",
+        "description": "",
+        "slug": "cuidado-de-las-prendas-jabon-prensado"
+      },
+      {
+        "id": "deterg-liq-p-ropas",
+        "name": "Deterg Liq P Ropas",
+        "description": "",
+        "slug": "cuidado-de-las-prendas-deterg-liq-p-ropas"
+      },
+      {
+        "id": "complementarios",
+        "name": "Complementarios",
+        "description": "",
+        "slug": "cuidado-de-las-prendas-complementarios"
+      }
+    ]
+  },
+  {
+    "id": "higiene-personal",
+    "name": "Higiene Personal",
+    "description": "",
+    "image": "https://cdn.cavallaro.com.py/ecommerce/higiene_personal.png",
+    "image2": "https://www.cavallaro.com.py/cdn/shop/files/HIGIENE-PERSONAL-1920x261_2e82a059-0dfc-4500-a73a-de41162ef48a.jpg?v=1765889273",
+    "slug": "higiene-personal",
+    "subcategories": [
+      {
+        "id": "coco-puro",
+        "name": "Coco Puro",
+        "description": "",
+        "slug": "higiene-personal-coco-puro"
+      },
+      {
+        "id": "tocador",
+        "name": "Tocador",
+        "description": "",
+        "slug": "higiene-personal-tocador"
+      }
+    ]
+  }
+]
