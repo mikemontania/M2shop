@@ -222,8 +222,12 @@ const HomePage: React.FC = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)
   }
 
-  const handleAddToCart = (product: Product, quantity: number) => {
-    
+  const handleAddToCart = async (product: Product, quantity: number) => {
+     try {
+    await addToCart(product, quantity);
+  } catch (error) {
+    console.error('Error al agregar producto:', error);
+  }
   }
 
   const handleCategoryClick = (categoryId: string) => {
