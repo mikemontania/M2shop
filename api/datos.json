@@ -1714,6 +1714,25 @@
     "tipoDispositivo": "desktop",
     "createdAt": "2024-03-01T00:00:00Z",
     "updatedAt": "2024-03-01T00:00:00Z"
+  },
+  {
+    "id": 5,
+    "titulo": "Envío Gratis",
+    "subtitulo": "En compras mayores a 200.000 Gs",
+    "imagenUrl": "https://cdn.cavallaro.com.py/ecommerce/b2b.jpeg",
+    "imagenMobileUrl": "https://images.pexels.com/photos/4393426/pexels-photo-4393426.jpeg?auto=compress&cs=tinysrgb&w=800",
+    "link": "/productos",
+    "textoBoton": "Ver Catálogo",
+    "tipoBoton": "primario",
+    "posicionTexto": "centro",
+    "colorTexto": "#FFFFFF",
+    "activo": true,
+    "orden": 4,
+    "fechaInicio": null,
+    "fechaFin": null,
+    "tipoDispositivo": "desktop",
+    "createdAt": "2024-03-01T00:00:00Z",
+    "updatedAt": "2024-03-01T00:00:00Z"
   }
 ]
 }

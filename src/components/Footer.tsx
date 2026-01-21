@@ -19,12 +19,10 @@ const Footer: React.FC = () => {
           <div className="footer-section">
             <h4>Categorías</h4>
             <ul>
-              <li><a href="#">Camisas</a></li>
-              <li><a href="#">Pantalones</a></li>
-              <li><a href="#">Sacos</a></li>
-              <li><a href="#">Calzados</a></li>
-              <li><a href="#">Accesorios</a></li>
-            </ul>
+              <li><a href="#">Limpieza hogar</a></li>
+              <li><a href="#">Cuidado prendas</a></li>
+              <li><a href="#">Higiene personal</a></li>
+             </ul>
           </div>
 
           <div className="footer-section">
