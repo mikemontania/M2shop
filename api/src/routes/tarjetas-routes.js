@@ -3,7 +3,7 @@
 // ========================================
 
 const { Router } = require('express');
-const tarjetaController = require('../controllers/tarjeta.controller');
+const tarjetaController = require('../controllers/Tarjeta.controller');
 const { validarJWT } = require('../middlewares/validar-jwt');
 
 const router = Router();

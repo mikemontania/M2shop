@@ -1,7 +1,7 @@
 const { Router } = require("express")
 const productoController = require("../controllers/Producto.controller")
 const imagenProductoController = require("../controllers/imagenProducto.controller")
-const varianteProductoController = require("../controllers/variante.controller")
+const varianteProductoController = require("../controllers/Variante.controller")
 const atributoController = require("../controllers/Atributo.controller")
 const valorAtributoController = require("../controllers/ValorAtributo.controller")
  

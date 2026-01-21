@@ -286,7 +286,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Sección de Categorías */}
-       <section className="categories-section">
+     {/*   <section className="categories-section">
         <div className="container">
           <h2 className="section-title">Categorías</h2>
           <div className="categories-grid">
@@ -299,7 +299,7 @@ const HomePage: React.FC = () => {
             ))}
           </div>
         </div>
-      </section>  
+      </section>   */}
 
       {/* ⭐ Carrusel de Novedades CON LAZY LOADING */}
       {newProducts.length > 0 && (
